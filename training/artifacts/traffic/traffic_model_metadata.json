@@ -1,0 +1,103 @@
+{
+  "deviation_from_original_spec": "Original spec asked for +30/+60/+120 minute horizons. No free historical minute-level traffic dataset exists for Chennai (or generally), so this milestone predicts +1h/+2h instead, using an hourly-resolution proxy target. This is documented here rather than silently substituted.",
+  "target_definition": "PROXY LABEL, not measured congestion. congestion_risk_next_{h}h = 1 if the target hour falls in a documented Chennai weekday peak window (08:00-11:00 or 17:30-21:00) OR rainfall in that hour meets the same IMD Heavy Rain threshold (scaled) used in M2. Sources: published Chennai peak-hour patterns + India Meteorological Department rainfall classification.",
+  "static_feature_sources": {
+    "road_network": "OpenStreetMap via Overpass API \u2014 major road segment count + traffic signal count within 1.5km of zone center",
+    "road_network_data_quality": "0/20 zones had their road-network features median-imputed because Overpass fetch failed (public instances rate-limit shared Colab IPs). See overpass_fetch_ok per zone below.",
+    "overpass_fetch_ok_by_zone": {
+      "CHN_CENTRAL": true,
+      "CHN_MANALI": true,
+      "CHN_KODUNGYR": true,
+      "CHN_ROYAPRM": true,
+      "CHN_WSHRMNPT": true,
+      "CHN_PERAMBUR": true,
+      "CHN_KOYAMBDU": true,
+      "CHN_ANNANGR": true,
+      "CHN_AMBATTUR": true,
+      "CHN_AVADI": true,
+      "CHN_NUNGMBKM": true,
+      "CHN_TNAGAR": true,
+      "CHN_MYLAPORE": true,
+      "CHN_ADYAR": true,
+      "CHN_GUINDY": true,
+      "CHN_VELACHRY": true,
+      "CHN_PERUNGDI": true,
+      "CHN_SHOLINGL": true,
+      "CHN_TAMBARAM": true,
+      "CHN_PALLAVRM": true
+    },
+    "congestion_hotspots": "Hand-compiled list of documented chronic-congestion corridors from published Chennai traffic studies (Kathipara, Koyambedu, Vadapalani, Anna Salai, T Nagar, OMR IT corridor, GST Road, Perambur) \u2014 real coordinates, not exhaustive"
+  },
+  "rainfall_source": "Open-Meteo Historical Weather Archive (same as M2)",
+  "feature_columns": [
+    "zone_id",
+    "hour",
+    "day_of_week",
+    "is_weekend",
+    "rainfall_mm",
+    "rainfall_6h_sum",
+    "temperature_c",
+    "humidity_pct",
+    "major_road_segments",
+    "traffic_signal_count",
+    "road_density_score",
+    "distance_to_congestion_hotspot_km"
+  ],
+  "target_columns": [
+    "congestion_risk_next_1h",
+    "congestion_risk_next_2h"
+  ],
+  "test_metrics": {
+    "logreg_1h": {
+      "precision": 0.45759199714183635,
+      "recall": 0.9809297694723137,
+      "f1": 0.624065096109338,
+      "roc_auc": 0.7479064692827712,
+      "pr_auc": 0.3780635021589495
+    },
+    "rf_1h": {
+      "precision": 0.6553607056599811,
+      "recall": 0.9559623190625718,
+      "f1": 0.7776220290938541,
+      "roc_auc": 0.9778664973070358,
+      "pr_auc": 0.9632157671868696
+    },
+    "xgboost_1h": {
+      "precision": 0.9909297052154195,
+      "recall": 0.9705904878609175,
+      "f1": 0.9806546467538497,
+      "roc_auc": 0.989835759250066,
+      "pr_auc": 0.988141258609818
+    },
+    "logreg_2h": {
+      "precision": 0.35943626754560437,
+      "recall": 0.9944968553459119,
+      "f1": 0.5280293859832199,
+      "roc_auc": 0.7167103299428553,
+      "pr_auc": 0.3360671192194388
+    },
+    "rf_2h": {
+      "precision": 0.7922659601312138,
+      "recall": 0.9873427672955974,
+      "f1": 0.879112417751645,
+      "roc_auc": 0.9884108265385104,
+      "pr_auc": 0.9733004811394224
+    },
+    "xgboost_2h": {
+      "precision": 0.9999205908044152,
+      "recall": 0.989937106918239,
+      "f1": 0.9949038043692964,
+      "roc_auc": 0.9960946324445227,
+      "pr_auc": 0.9952404863789698
+    }
+  },
+  "train_range": [
+    "2024-09-19 00:00:00",
+    "2026-02-12 16:00:00"
+  ],
+  "test_range": [
+    "2026-06-02 08:00:00",
+    "2026-09-19 23:00:00"
+  ],
+  "optional_upgrade_path": "If a free TomTom/HERE API key becomes available, poll live traffic-flow for these 20 zone centers over 1-2 weeks and use the measured speed-vs-freeflow ratio as a held-out sanity check against this proxy's predictions \u2014 not as a training label, since a couple weeks of live polling is still not a historical series."
+}

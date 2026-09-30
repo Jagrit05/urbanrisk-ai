@@ -1,0 +1,43 @@
+{
+  "scope_note": "M4 combines M1/M2/M3 model outputs into a 0-100 Urban Risk Score and demonstrates an anomaly-detection layer. It does NOT ingest live data (that's M6) \u2014 Section 6's results are illustrative scenarios, not real predictions for a real moment in time.",
+  "risk_weights": {
+    "aqi": 0.35,
+    "flood": 0.4,
+    "traffic": 0.25
+  },
+  "risk_weights_rationale": "Documented judgment call, not an official standard. Flood weighted highest (acute safety risk, backed by real GCC inundation history in M2). AQI next (chronic health burden). Traffic lowest (rarely acutely dangerous).",
+  "risk_categories": [
+    [
+      20,
+      "Low"
+    ],
+    [
+      40,
+      "Moderate"
+    ],
+    [
+      60,
+      "Elevated"
+    ],
+    [
+      80,
+      "High"
+    ],
+    [
+      100,
+      "Critical"
+    ]
+  ],
+  "aqi_rescale": "risk = min(100, predicted_AQI / 5) \u2014 linear rescale of the existing 0-500 index",
+  "flood_model_selected_per_horizon": {
+    "6": "rf",
+    "12": "rf"
+  },
+  "traffic_model_selected_per_horizon": {
+    "1": "xgboost",
+    "2": "xgboost"
+  },
+  "model_selection_method": "argmax test ROC-AUC per horizon, read dynamically from each milestone's own saved metadata",
+  "zone_id_encoding_assumption": "AQI and flood/traffic XGBoost models assumed trained on zone_id.astype('category').cat.codes (pandas default = alphabetically sorted unique values). Verify against actual M1 training code if a specific zone's AQI/flood predictions look inconsistent.",
+  "anomaly_detector_status": "DEMO-FIT on 60 illustrative rows only \u2014 refit on real historical hourly data in M6 before production use"
+}

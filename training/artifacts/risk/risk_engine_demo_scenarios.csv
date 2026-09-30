@@ -1,0 +1,61 @@
+scenario,zone_name,predicted_aqi_6h,aqi_risk,flood_model,flood_prob_6h,flood_risk,traffic_model,traffic_prob_1h,traffic_risk,urban_risk_score,risk_category
+"Evening Rush, Moderate Rain",Sholinganallur/OMR,153.8,30.8,rf,0.2749,27.5,xgboost,0.8282,82.8,42.5,Elevated
+"Evening Rush, Moderate Rain",Manali,153.8,30.8,rf,0.2717,27.2,xgboost,0.8282,82.8,42.3,Elevated
+"Evening Rush, Moderate Rain",Velachery,153.8,30.8,rf,0.271,27.1,xgboost,0.8282,82.8,42.3,Elevated
+"Evening Rush, Moderate Rain",Tambaram,153.8,30.8,rf,0.2713,27.1,xgboost,0.8282,82.8,42.3,Elevated
+"Evening Rush, Moderate Rain",Pallavaram,153.8,30.8,rf,0.2705,27.1,xgboost,0.8282,82.8,42.3,Elevated
+"Evening Rush, Moderate Rain",Perambur,153.8,30.8,rf,0.2675,26.8,xgboost,0.8282,82.8,42.2,Elevated
+"Evening Rush, Moderate Rain",Perungudi,153.8,30.8,rf,0.269,26.9,xgboost,0.8282,82.8,42.2,Elevated
+"Evening Rush, Moderate Rain",Koyambedu,153.8,30.8,rf,0.2662,26.6,xgboost,0.8282,82.8,42.1,Elevated
+"Evening Rush, Moderate Rain",Anna Nagar,153.8,30.8,rf,0.2662,26.6,xgboost,0.8282,82.8,42.1,Elevated
+"Evening Rush, Moderate Rain",Ambattur,153.8,30.8,rf,0.2658,26.6,xgboost,0.8282,82.8,42.1,Elevated
+"Evening Rush, Moderate Rain",Avadi,153.8,30.8,rf,0.2659,26.6,xgboost,0.8282,82.8,42.1,Elevated
+"Evening Rush, Moderate Rain",Nungambakkam,153.8,30.8,rf,0.2646,26.5,xgboost,0.8282,82.8,42.1,Elevated
+"Evening Rush, Moderate Rain",T Nagar,153.8,30.8,rf,0.2647,26.5,xgboost,0.8282,82.8,42.1,Elevated
+"Evening Rush, Moderate Rain",Adyar,153.8,30.8,rf,0.2631,26.3,xgboost,0.8282,82.8,42.0,Elevated
+"Evening Rush, Moderate Rain",Guindy,153.8,30.8,rf,0.2631,26.3,xgboost,0.8282,82.8,42.0,Elevated
+"Evening Rush, Moderate Rain",Kodungaiyur,153.8,30.8,rf,0.2608,26.1,xgboost,0.8282,82.8,41.9,Elevated
+"Evening Rush, Moderate Rain",Royapuram,153.8,30.8,rf,0.2596,26.0,xgboost,0.8282,82.8,41.9,Elevated
+"Evening Rush, Moderate Rain",Mylapore,153.8,30.8,rf,0.2615,26.2,xgboost,0.8282,82.8,41.9,Elevated
+"Evening Rush, Moderate Rain",Washermanpet,153.8,30.8,rf,0.2581,25.8,xgboost,0.8282,82.8,41.8,Elevated
+"Evening Rush, Moderate Rain",Chennai Central,153.8,30.8,rf,0.2566,25.7,xgboost,0.8282,82.8,41.7,Elevated
+"Northeast Monsoon Heavy Rain, Weekend Morning",Sholinganallur/OMR,78.3,15.7,rf,0.1847,18.5,xgboost,0.7288,72.9,31.1,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Chennai Central,78.3,15.7,rf,0.1815,18.2,xgboost,0.7288,72.9,31.0,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Anna Nagar,78.3,15.7,rf,0.1815,18.2,xgboost,0.7288,72.9,31.0,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Nungambakkam,78.3,15.7,rf,0.1814,18.1,xgboost,0.7288,72.9,31.0,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Koyambedu,78.0,15.6,rf,0.1815,18.2,xgboost,0.7288,72.9,30.9,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Avadi,78.0,15.6,rf,0.1801,18.0,xgboost,0.7311,73.1,30.9,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Manali,78.3,15.7,rf,0.1784,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Kodungaiyur,78.3,15.7,rf,0.1783,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Royapuram,78.3,15.7,rf,0.1783,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Washermanpet,78.3,15.7,rf,0.1783,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Perambur,78.3,15.7,rf,0.1783,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Ambattur,78.0,15.6,rf,0.1769,17.7,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Mylapore,78.3,15.7,rf,0.1783,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Adyar,78.3,15.7,rf,0.1782,17.8,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Tambaram,78.0,15.6,rf,0.177,17.7,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Pallavaram,78.0,15.6,rf,0.1769,17.7,xgboost,0.7288,72.9,30.8,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Guindy,78.3,15.7,rf,0.1751,17.5,xgboost,0.7288,72.9,30.7,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",T Nagar,78.3,15.7,rf,0.1719,17.2,xgboost,0.7288,72.9,30.6,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Velachery,78.3,15.7,rf,0.1718,17.2,xgboost,0.7288,72.9,30.6,Moderate
+"Northeast Monsoon Heavy Rain, Weekend Morning",Perungudi,78.3,15.7,rf,0.1718,17.2,xgboost,0.7288,72.9,30.6,Moderate
+Typical Dry Midday,Koyambedu,131.9,26.4,rf,0.0098,1.0,xgboost,0.1064,10.6,12.3,Low
+Typical Dry Midday,Avadi,131.9,26.4,rf,0.011,1.1,xgboost,0.1064,10.6,12.3,Low
+Typical Dry Midday,Sholinganallur/OMR,131.9,26.4,rf,0.0103,1.0,xgboost,0.1064,10.6,12.3,Low
+Typical Dry Midday,Tambaram,131.9,26.4,rf,0.0106,1.1,xgboost,0.1064,10.6,12.3,Low
+Typical Dry Midday,Manali,131.9,26.4,rf,0.007,0.7,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Nungambakkam,131.9,26.4,rf,0.0071,0.7,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,T Nagar,131.9,26.4,rf,0.007,0.7,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Mylapore,131.9,26.4,rf,0.0073,0.7,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Adyar,131.9,26.4,rf,0.0072,0.7,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Guindy,131.9,26.4,rf,0.0073,0.7,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Velachery,131.9,26.4,rf,0.0078,0.8,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Perungudi,131.9,26.4,rf,0.0084,0.8,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Pallavaram,131.9,26.4,rf,0.0081,0.8,xgboost,0.1064,10.6,12.2,Low
+Typical Dry Midday,Chennai Central,131.9,26.4,rf,0.0054,0.5,xgboost,0.1064,10.6,12.1,Low
+Typical Dry Midday,Kodungaiyur,131.9,26.4,rf,0.0056,0.6,xgboost,0.1064,10.6,12.1,Low
+Typical Dry Midday,Royapuram,131.9,26.4,rf,0.0054,0.5,xgboost,0.1064,10.6,12.1,Low
+Typical Dry Midday,Washermanpet,131.9,26.4,rf,0.0054,0.5,xgboost,0.1064,10.6,12.1,Low
+Typical Dry Midday,Perambur,131.9,26.4,rf,0.0055,0.5,xgboost,0.1064,10.6,12.1,Low
+Typical Dry Midday,Anna Nagar,131.9,26.4,rf,0.0056,0.6,xgboost,0.1064,10.6,12.1,Low
+Typical Dry Midday,Ambattur,131.9,26.4,rf,0.0061,0.6,xgboost,0.1064,10.6,12.1,Low

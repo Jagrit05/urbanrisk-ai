@@ -1,0 +1,97 @@
+{
+  "target_definition": "PROXY LABEL, not verified flooding. flood_risk_{h}h = 1 if rainfall in the next h hours meets or exceeds IMD Heavy Rain (64.5-115.5mm/24h) scaled proportionally to h. Source: India Meteorological Department published rainfall classification.",
+  "static_feature_source": "historical_inundation_count / historical_max_depth_in / historical_mean_depth_in are derived from REAL Greater Chennai Corporation inundation-point data (public domain, via OpenCity.in), counted/aggregated within 1.5km of each zone center. This is genuine field evidence, unlike the target.",
+  "elevation_source": "Open-Meteo Elevation API (Copernicus DEM GLO-90, 90m resolution)",
+  "water_distance_source": "OpenStreetMap via Overpass API \u2014 incomplete for minor drainage channels",
+  "feature_columns": [
+    "rainfall_past_1h",
+    "rainfall_past_3h",
+    "rainfall_past_6h",
+    "rainfall_past_12h",
+    "rainfall_past_24h",
+    "temperature_lag1h",
+    "temperature_lag3h",
+    "temperature_lag6h",
+    "temperature_lag12h",
+    "humidity_lag1h",
+    "humidity_lag3h",
+    "humidity_lag6h",
+    "humidity_lag12h",
+    "pressure_lag1h",
+    "pressure_lag3h",
+    "pressure_lag6h",
+    "pressure_lag12h",
+    "wind_speed_lag1h",
+    "wind_speed_lag3h",
+    "wind_speed_lag6h",
+    "wind_speed_lag12h",
+    "hour",
+    "day_of_week",
+    "month",
+    "is_weekend",
+    "elevation_m",
+    "water_body_distance_km",
+    "historical_inundation_count",
+    "historical_max_depth_in",
+    "historical_mean_depth_in",
+    "zone_id",
+    "latitude",
+    "longitude"
+  ],
+  "target_columns": [
+    "flood_risk_6h",
+    "flood_risk_12h"
+  ],
+  "test_metrics": {
+    "logreg_6h": {
+      "Precision": 0.008739869696488161,
+      "Recall": 0.3525641025641026,
+      "F1": 0.017056908047759344,
+      "ROC_AUC": 0.7884190022470856,
+      "PR_AUC": 0.008078014321744318
+    },
+    "rf_6h": {
+      "Precision": 0.0013513513513513514,
+      "Recall": 0.01282051282051282,
+      "F1": 0.0024449877750611247,
+      "ROC_AUC": 0.6817288868810492,
+      "PR_AUC": 0.0056996014641896775
+    },
+    "xgboost_6h": {
+      "Precision": 0.0030045067601402104,
+      "Recall": 0.23076923076923078,
+      "F1": 0.005931784478497282,
+      "ROC_AUC": 0.5708069682142026,
+      "PR_AUC": 0.004040655479348225
+    },
+    "logreg_12h": {
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC_AUC": 0.6529225780019673,
+      "PR_AUC": 0.0003022386176171846
+    },
+    "rf_12h": {
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC_AUC": 0.7801856247158497,
+      "PR_AUC": 0.0007520672289711572
+    },
+    "xgboost_12h": {
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1": 0.0,
+      "ROC_AUC": 0.5783200427327526,
+      "PR_AUC": 0.0002832247754694821
+    }
+  },
+  "train_range": [
+    "2024-09-18 12:00:00",
+    "2026-02-11 19:00:00"
+  ],
+  "test_range": [
+    "2026-06-01 10:00:00",
+    "2026-09-18 23:00:00"
+  ]
+}
