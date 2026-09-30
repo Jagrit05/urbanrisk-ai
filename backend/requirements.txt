@@ -4,7 +4,7 @@ sqlalchemy==2.0.35
 psycopg2-binary==2.9.9
 pandas==2.2.3
 numpy==1.26.4
-scikit-learn==1.5.2
+scikit-learn==1.6.1  # matches the sklearn version the M1-M3 artifacts were pickled with
 # Pinned to match the actual Colab training environment (verify against yours if it
 # drifts) — a version mismatch here is what caused the earlier categorical zone_id bug.
 xgboost==3.4.1
