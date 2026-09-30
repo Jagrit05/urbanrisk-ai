@@ -1,0 +1,14 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.5.2
+# Pinned to match the actual Colab training environment (verify against yours if it
+# drifts) — a version mismatch here is what caused the earlier categorical zone_id bug.
+xgboost==3.4.1
+shap==0.46.0
+joblib==1.6.0
+pydantic==2.9.2
+requests==2.32.3

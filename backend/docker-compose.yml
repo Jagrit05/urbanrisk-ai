@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: urbanrisk
+      POSTGRES_PASSWORD: urbanrisk
+      POSTGRES_DB: urbanrisk
+    volumes:
+      - urbanrisk_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urbanrisk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://urbanrisk:urbanrisk@db:5432/urbanrisk
+      MODELS_DIR: /app/model_artifacts
+    volumes:
+      # Put your M1/M2/M3 saved artifacts here — see backend/README.md for the exact
+      # file layout expected under each subfolder.
+      - ./model_artifacts:/app/model_artifacts:ro
+    ports:
+      - "8000:8000"
+
+  ingestion:
+    # M6: live data ingestion worker — same image as the backend (same deps, same
+    # code), different entrypoint. Runs continuously, independent of API traffic.
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://urbanrisk:urbanrisk@db:5432/urbanrisk
+      INGESTION_INTERVAL_MINUTES: "10"   # spec target is 5-15 minutes
+    command: ["python", "-m", "app.ingestion.worker"]
+
+volumes:
+  urbanrisk_pgdata:

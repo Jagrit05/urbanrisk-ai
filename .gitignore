@@ -1,0 +1,25 @@
+# Node / Vite
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Docker volumes / misc
+*.log
+.DS_Store
+Thumbs.db
+
+# Freebuff workspace metadata
+.freebuff/
