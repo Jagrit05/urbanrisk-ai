@@ -7,7 +7,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
-> **Live demo:** Frontend → *(add your Vercel URL here after deploying)* · API docs → *(add your Render URL here + `/docs`)*
+> **Live demo:** Frontend → *(add your Vercel URL here after deploying)* · API docs → *(add your Render URL here + `/docs`)* · [Screenshots below](#screenshots) 👇
 
 A real-time urban risk intelligence system for Chennai: machine-learning models
 predict **air quality (AQI)**, **flood probability**, and **traffic congestion**
@@ -16,16 +16,20 @@ the results live into a smart-city command-center dashboard.
 
 ## Screenshots
 
-> Add images to `docs/` and they'll render here. Suggested shots:
-> the Command Center with the hero map, a zone detail panel, and the forecast playback timeline.
+**Command Center** — live Chennai risk map with animated, score-sized markers and heat glow;
+city-wide gauges; watchlist. Everything streams over SSE.
 
-```markdown
 ![Command Center](docs/screenshot-command-center.png)
-![Zone detail](docs/screenshot-zone-panel.png)
-```
 
-*(Until screenshots are added, clone and run it — the map with its animated
-risk markers and heat glow is the fastest way to see what this does.)*
+**Zone drill-down + forecast playback** — click any marker for the full story: per-signal
+gauges, main contributor, live status, and a NOW → +6h → +12h → +24h outlook with play/pause.
+
+![Zone detail and forecast timeline](docs/screenshot-zone-forecast.png)
+
+**Forecasts** — playback-style timeline across horizons, per-signal forecast detail, and a
+live city-trend chart built from received stream frames.
+
+![Forecasts](docs/screenshot-forecasts.png)
 
 ## The full ML lifecycle, end to end
 
