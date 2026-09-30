@@ -23,7 +23,7 @@ from sqlalchemy import text
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from app.database import SessionLocal, init_schema
-from app.ingestion.fetch import fetch_current_weather, fetch_current_air_quality, FetchError
+from app.ingestion.fetch import fetch_current_weather_batch, fetch_current_air_quality_batch, FetchError
 
 INTERVAL_MINUTES = int(os.environ.get("INGESTION_INTERVAL_MINUTES", "10"))
 if not (5 <= INTERVAL_MINUTES <= 15):
@@ -39,42 +39,49 @@ def get_zones(db):
 def run_one_cycle(db):
     zones = get_zones(db)
     if not zones:
-        print("[ingestion] `locations` table is empty — backend hasn't seeded zones yet. Skipping this cycle.")
+        print("[ingestion] `locations` table is empty -- backend hasn't seeded zones yet. Skipping this cycle.")
         return
 
-    weather_ok, weather_fail = 0, 0
-    aq_ok, aq_fail = 0, 0
+    coords = [(zone["latitude"], zone["longitude"]) for zone in zones]
 
-    for zone in zones:
-        zone_id, lat, lon = zone["zone_id"], zone["latitude"], zone["longitude"]
+    # Batched fetching: Open-Meteo accepts comma-separated coordinate lists, so a full
+    # 20-zone cycle costs 2 requests instead of 40. On shared-egress hosts (Render free
+    # tier) the old per-zone loop exhausted the provider's per-IP quota (HTTP 429 on
+    # every call); batching stays comfortably inside it. Same honesty rule as before:
+    # a failed fetch is skipped -- never fabricated, never crashes the cycle.
+    try:
+        weather_rows = fetch_current_weather_batch(coords)
+        weather_fail = sum(1 for row in weather_rows if row is None)
+        weather_ok = len(zones) - weather_fail
+    except FetchError as e:
+        weather_rows, weather_ok, weather_fail = [None] * len(zones), 0, len(zones)
+        print(f"[ingestion] weather batch fetch FAILED: {e} -- keeping last valid observation for all zones.")
 
-        try:
-            w = fetch_current_weather(lat, lon)
+    try:
+        aq_rows = fetch_current_air_quality_batch(coords)
+        aq_fail = sum(1 for row in aq_rows if row is None)
+        aq_ok = len(zones) - aq_fail
+    except FetchError as e:
+        aq_rows, aq_ok, aq_fail = [None] * len(zones), 0, len(zones)
+        print(f"[ingestion] air quality batch fetch FAILED: {e} -- keeping last valid observation for all zones.")
+
+    for zone, w, aq in zip(zones, weather_rows, aq_rows):
+        if w is not None:
             db.execute(
                 text("""INSERT INTO weather (zone_id, observed_at, temperature, humidity, pressure,
                          rainfall_mm, wind_speed, source)
                          VALUES (:z, :t, :temp, :hum, :pres, :rain, :wind, 'openmeteo_live')
                          ON CONFLICT (zone_id, observed_at, source) DO NOTHING"""),
-                {"z": zone_id, "t": w["observed_at"], "temp": w["temperature"], "hum": w["humidity"],
+                {"z": zone["zone_id"], "t": w["observed_at"], "temp": w["temperature"], "hum": w["humidity"],
                  "pres": w["pressure"], "rain": w["rainfall_mm"], "wind": w["wind_speed"]},
             )
-            weather_ok += 1
-        except FetchError as e:
-            weather_fail += 1
-            print(f"[ingestion] weather fetch FAILED for {zone_id}: {e} — keeping last valid observation.")
-
-        try:
-            aq = fetch_current_air_quality(lat, lon)
+        if aq is not None:
             db.execute(
                 text("""INSERT INTO air_quality (zone_id, observed_at, aqi, pm2_5, pm10, source)
                          VALUES (:z, :t, :aqi, :pm25, :pm10, 'openmeteo_live')
                          ON CONFLICT (zone_id, observed_at, source) DO NOTHING"""),
-                {"z": zone_id, "t": aq["observed_at"], "aqi": aq["aqi"], "pm25": aq["pm2_5"], "pm10": aq["pm10"]},
+                {"z": zone["zone_id"], "t": aq["observed_at"], "aqi": aq["aqi"], "pm25": aq["pm2_5"], "pm10": aq["pm10"]},
             )
-            aq_ok += 1
-        except FetchError as e:
-            aq_fail += 1
-            print(f"[ingestion] air quality fetch FAILED for {zone_id}: {e} — keeping last valid observation.")
 
     db.commit()
 
@@ -91,10 +98,9 @@ def run_one_cycle(db):
         )
     db.commit()
 
-    print(f"[ingestion] cycle done — weather {weather_ok}/{len(zones)} ok, "
+    print(f"[ingestion] cycle done -- weather {weather_ok}/{len(zones)} ok, "
           f"air_quality {aq_ok}/{len(zones)} ok "
           f"({weather_fail} weather failures, {aq_fail} AQ failures)")
-
 
 def main():
     print(f"[ingestion] starting — polling every {INTERVAL_MINUTES} minutes")
