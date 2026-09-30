@@ -86,6 +86,42 @@ def startup():
         db.close()
     print(f"[startup] Loaded {len(registry.zone_static_df)} zones and all M1-M4 model artifacts.")
 
+    # Single-process deployments (Render free tier) flip ENABLE_INGESTION=1 to run
+    # the M6 ingestion loop in a daemon thread inside this process; docker-compose
+    # keeps the dedicated worker container instead (default: off).
+    if os.environ.get("ENABLE_INGESTION", "").lower() in ("1", "true", "yes"):
+        _start_embedded_ingestion()
+
+
+def _start_embedded_ingestion():
+    """Run the M6 ingestion loop as a daemon thread inside the API process.
+
+    docker-compose runs the worker as its own container; this embedded mode is
+    for single-service hosts (Render's free tier allows one web service) so the
+    deployed API actually receives live observations. Same run_one_cycle, same
+    per-zone failure handling: a failed fetch is skipped, never fabricated.
+    """
+    import threading
+    import time
+    import traceback
+
+    from .ingestion.worker import run_one_cycle, INTERVAL_MINUTES
+
+    def _loop():
+        print(f"[ingestion] embedded worker starting - polling every {INTERVAL_MINUTES} minutes")
+        while True:
+            db = SessionLocal()
+            try:
+                run_one_cycle(db)
+            except Exception:
+                print("[ingestion] cycle raised an unexpected exception:")
+                traceback.print_exc()
+            finally:
+                db.close()
+            time.sleep(INTERVAL_MINUTES * 60)
+
+    threading.Thread(target=_loop, name="ingestion-worker", daemon=True).start()
+
 
 def _require_registry():
     if registry is None:

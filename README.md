@@ -7,7 +7,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
-> **Live demo:** Frontend → *(add your Vercel URL here after deploying)* · API docs → *(add your Render URL here + `/docs`)* · [Screenshots below](#screenshots) 👇
+> **Live demo:** Frontend → https://urbanrisk-ai.vercel.app · API docs → https://urbanrisk-backend-4yqu.onrender.com/docs · [Screenshots below](#screenshots) 👇
 
 A real-time urban risk intelligence system for Chennai: machine-learning models
 predict **air quality (AQI)**, **flood probability**, and **traffic congestion**
@@ -80,9 +80,10 @@ seconds of the backend starting.
 **Backend — Render:** this repo ships a [Blueprint](render.yaml).
 In Render: **New → Blueprint** → connect this repo → Apply. It provisions a
 free Postgres and the backend web service (Docker, models baked into the image).
-Note: the ingestion worker isn't included on the free plan — run it locally
-(`python -m app.ingestion.worker` with `DATABASE_URL` pointed at the Render DB)
-or upgrade the service.
+The Blueprint sets `ENABLE_INGESTION=1`, so the web service also runs the M6
+ingestion loop in-process (the free tier allows only one service) — first live
+observations land within a minute of deploying. docker-compose keeps the
+dedicated worker container instead.
 
 **Frontend — Vercel:** [frontend/vercel.json](frontend/vercel.json) is ready.
 In Vercel: **Add New → Project** → import this repo → set **Root Directory** to

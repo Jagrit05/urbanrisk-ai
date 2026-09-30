@@ -1,7 +1,8 @@
 # Render Blueprint — deploys the UrbanRisk backend (API + SSE) with a managed Postgres.
 # In Render: New → Blueprint → connect this repo → Apply.
 # Deploy the frontend separately on Vercel (frontend/vercel.json).
-# Ingestion worker is not included in the free tier — run it locally or on a paid plan.
+# ENABLE_INGESTION=1 embeds the ingestion loop in the web service (the free tier
+# allows only one service); docker-compose keeps the dedicated worker container.
 
 databases:
   - name: urbanrisk-db
@@ -26,3 +27,5 @@ services:
         value: /app/model_artifacts
       - key: INGESTION_INTERVAL_MINUTES
         value: "10"
+      - key: ENABLE_INGESTION
+        value: "1"
