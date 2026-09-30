@@ -27,6 +27,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://urbanrisk:urbanrisk@db:5432/urbanrisk
       MODELS_DIR: /app/model_artifacts
+      # The dedicated `ingestion` container below does this job — don't run it twice.
+      ENABLE_INGESTION: "0"
     volumes:
       # Put your M1/M2/M3 saved artifacts here — see backend/README.md for the exact
       # file layout expected under each subfolder.

@@ -80,10 +80,10 @@ seconds of the backend starting.
 **Backend — Render:** this repo ships a [Blueprint](render.yaml).
 In Render: **New → Blueprint** → connect this repo → Apply. It provisions a
 free Postgres and the backend web service (Docker, models baked into the image).
-The Blueprint sets `ENABLE_INGESTION=1`, so the web service also runs the M6
-ingestion loop in-process (the free tier allows only one service) — first live
-observations land within a minute of deploying. docker-compose keeps the
-dedicated worker container instead.
+The backend runs the M6 ingestion loop in-process by default (the free tier
+allows only one service), so first live observations land within a minute of
+deploying; set `ENABLE_INGESTION=0` to disable it. docker-compose already opts
+out and keeps the dedicated worker container.
 
 **Frontend — Vercel:** [frontend/vercel.json](frontend/vercel.json) is ready.
 In Vercel: **Add New → Project** → import this repo → set **Root Directory** to
