@@ -7,6 +7,11 @@ keyless/free access.
 Traffic has no free live Chennai feed (same finding as M3) — there is deliberately no
 fetch_current_traffic() here. The traffic model's inputs (calendar + current rainfall)
 are already fully covered by fetch_current_weather().
+
+Weather fallback: api.open-meteo.com rate-limits per client IP, which permanently
+breaks ingestion on hosts with shared egress IPs (Render's free tier). MET Norway's
+locationforecast 2.0 is keyless too (it only requires an identifying User-Agent), so
+fetch_current_weather_met_batch() is the fallback provider for those cycles.
 """
 import time
 import requests
@@ -14,6 +19,9 @@ from datetime import datetime, timezone
 
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 AIR_QUALITY_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
+MET_WEATHER_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+# MET's terms of service require an identifying User-Agent with contact info.
+MET_USER_AGENT = "urbanrisk-ai/0.1 (https://github.com/Jagrit05/urbanrisk-ai; contact: jagritkejriwal05@gmail.com)"
 
 WEATHER_VARS = "temperature_2m,relative_humidity_2m,pressure_msl,precipitation,wind_speed_10m"
 AIR_QUALITY_VARS = "pm2_5,pm10,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi"
@@ -95,6 +103,43 @@ def fetch_current_air_quality_batch(coords) -> list:
         }
 
     return _rows_from_batch(_get_with_retry(AIR_QUALITY_URL, _batch_params(coords, AIR_QUALITY_VARS)), _extract)
+
+
+def fetch_current_weather_met_batch(coords) -> list:
+    """Fallback weather provider: MET Norway locationforecast 2.0 (keyless).
+
+    MET has no batch endpoint, so this issues one request per location, spaced out
+    to stay well inside their per-second limits (we poll on a 10-minute cadence,
+    which their caching guidance explicitly endorses). Rows mirror
+    fetch_current_weather_batch's shape exactly; wind is converted m/s -> km/h to
+    match what the Open-Meteo rows store. A failed location yields None — same
+    honesty rule: skip, never fabricate.
+    """
+    rows = []
+    for lat, lon in coords:
+        try:
+            r = requests.get(
+                MET_WEATHER_URL, params={"lat": lat, "lon": lon}, timeout=15,
+                headers={"User-Agent": MET_USER_AGENT},
+            )
+            r.raise_for_status()
+            ts = r.json()["properties"]["timeseries"][0]
+            details = ts["data"]["instant"]["details"]
+            next_hour = ts["data"].get("next_1_hours") or {}
+            rain = (next_hour.get("details") or {}).get("precipitation_amount")
+            wind = details.get("wind_speed")
+            rows.append({
+                "observed_at": datetime.fromisoformat(ts["time"].replace("Z", "+00:00")),
+                "temperature": details.get("air_temperature"),
+                "humidity": details.get("relative_humidity"),
+                "pressure": details.get("air_pressure_at_sea_level"),
+                "rainfall_mm": rain,
+                "wind_speed": round(wind * 3.6, 1) if wind is not None else None,
+            })
+        except (requests.exceptions.RequestException, KeyError, ValueError, TypeError):
+            rows.append(None)
+        time.sleep(0.35)  # polite spacing: MET asks clients not to hammer api.met.no
+    return rows
 
 
 def fetch_current_weather(lat: float, lon: float) -> dict:

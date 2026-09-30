@@ -138,6 +138,7 @@ CREATE INDEX IF NOT EXISTS idx_air_quality_zone_time ON air_quality (zone_id, ob
 
 INSERT INTO data_sources (source_name, description, status) VALUES
     ('openmeteo_weather', 'Open-Meteo Historical/Forecast Weather (M1/M2/M3 source)', 'not_yet_connected'),
+    ('metno_locationforecast', 'MET Norway locationforecast 2.0 - keyless fallback when Open-Meteo is rate-limited', 'not_yet_connected'),
     ('openmeteo_air_quality', 'Open-Meteo Air Quality reanalysis (M1 source)', 'not_yet_connected'),
     ('gcc_inundation_points', 'GCC documented inundation points, static reference (M2)', 'ok'),
     ('traffic_live_feed', 'No free live Chennai traffic feed identified (see M3 notes)', 'not_yet_connected')

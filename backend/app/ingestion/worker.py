@@ -23,7 +23,10 @@ from sqlalchemy import text
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from app.database import SessionLocal, init_schema
-from app.ingestion.fetch import fetch_current_weather_batch, fetch_current_air_quality_batch, FetchError
+from app.ingestion.fetch import (
+    fetch_current_weather_batch, fetch_current_air_quality_batch,
+    fetch_current_weather_met_batch, FetchError,
+)
 
 INTERVAL_MINUTES = int(os.environ.get("INGESTION_INTERVAL_MINUTES", "10"))
 if not (5 <= INTERVAL_MINUTES <= 15):
@@ -49,6 +52,7 @@ def run_one_cycle(db):
     # tier) the old per-zone loop exhausted the provider's per-IP quota (HTTP 429 on
     # every call); batching stays comfortably inside it. Same honesty rule as before:
     # a failed fetch is skipped -- never fabricated, never crashes the cycle.
+    weather_source = "openmeteo_weather"
     try:
         weather_rows = fetch_current_weather_batch(coords)
         weather_fail = sum(1 for row in weather_rows if row is None)
@@ -56,6 +60,15 @@ def run_one_cycle(db):
     except FetchError as e:
         weather_rows, weather_ok, weather_fail = [None] * len(zones), 0, len(zones)
         print(f"[ingestion] weather batch fetch FAILED: {e} -- keeping last valid observation for all zones.")
+
+    if weather_ok == 0:
+        # Primary weather provider returned nothing (rate-limited on shared-egress
+        # hosts) -- fall back to MET Norway instead of shipping a weatherless cycle.
+        weather_source = "metno_locationforecast"
+        weather_rows = fetch_current_weather_met_batch(coords)
+        weather_fail = sum(1 for row in weather_rows if row is None)
+        weather_ok = len(zones) - weather_fail
+        print(f"[ingestion] weather fallback (met.no): {weather_ok}/{len(zones)} ok.")
 
     try:
         aq_rows = fetch_current_air_quality_batch(coords)
@@ -70,10 +83,10 @@ def run_one_cycle(db):
             db.execute(
                 text("""INSERT INTO weather (zone_id, observed_at, temperature, humidity, pressure,
                          rainfall_mm, wind_speed, source)
-                         VALUES (:z, :t, :temp, :hum, :pres, :rain, :wind, 'openmeteo_live')
+                         VALUES (:z, :t, :temp, :hum, :pres, :rain, :wind, :src)
                          ON CONFLICT (zone_id, observed_at, source) DO NOTHING"""),
                 {"z": zone["zone_id"], "t": w["observed_at"], "temp": w["temperature"], "hum": w["humidity"],
-                 "pres": w["pressure"], "rain": w["rainfall_mm"], "wind": w["wind_speed"]},
+                 "pres": w["pressure"], "rain": w["rainfall_mm"], "wind": w["wind_speed"], "src": weather_source},
             )
         if aq is not None:
             db.execute(
@@ -88,8 +101,8 @@ def run_one_cycle(db):
     now = datetime.now(timezone.utc)
     if weather_ok > 0:
         db.execute(
-            text("""UPDATE data_sources SET last_updated = :t, status = 'ok' WHERE source_name = 'openmeteo_weather'"""),
-            {"t": now},
+            text("""UPDATE data_sources SET last_updated = :t, status = 'ok' WHERE source_name = :s"""),
+            {"t": now, "s": weather_source},
         )
     if aq_ok > 0:
         db.execute(
