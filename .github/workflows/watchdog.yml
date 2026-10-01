@@ -1,0 +1,132 @@
+name: Ingestion watchdog
+
+# Free-tier reality check (see docs/OPERATIONS.md): Render's shared egress IP is
+# rate-limited by weather providers and the free instance sleeps after ~15 idle
+# minutes, so live-data ingestion can silently stall. This workflow pings the live
+# API every 15 minutes and opens a GitHub issue when the dashboard has no reporting
+# zones or the weather/AQ sources go stale, then auto-closes it on recovery.
+# NOTE: GitHub disables cron workflows after 60 days of repo inactivity — any
+# commit resets that clock.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ingestion-watchdog
+  cancel-in-progress: false
+
+env:
+  HEALTH_URL: https://urbanrisk-backend-4yqu.onrender.com/api/data-health
+  DASHBOARD_URL: https://urbanrisk-backend-4yqu.onrender.com/api/dashboard
+  ISSUE_TITLE: "Ingestion watchdog: live data stalled"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+            const nowIso = () => new Date().toISOString();
+
+            // Free tier cold start can take ~60s, so retry with patience.
+            async function getJson(url, attempts = 4) {
+              let lastErr;
+              for (let i = 0; i < attempts; i++) {
+                try {
+                  const res = await fetch(url, { signal: AbortSignal.timeout(90000) });
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  return await res.json();
+                } catch (e) {
+                  lastErr = e;
+                  core.info(`attempt ${i + 1}/${attempts} failed: ${e.message}`);
+                  await sleep(20000);
+                }
+              }
+              throw lastErr;
+            }
+
+            async function findAlertIssue() {
+              const { data } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: "open",
+                per_page: 100,
+              });
+              return data.find((i) => i.title === process.env.ISSUE_TITLE);
+            }
+
+            let dashboard, health;
+            try {
+              [dashboard, health] = await Promise.all([
+                getJson(process.env.DASHBOARD_URL),
+                getJson(process.env.HEALTH_URL),
+              ]);
+            } catch (e) {
+              const body = `**API unreachable** at ${nowIso()}\n\n\`${e.message}\`\n\nCheck the service in the Render dashboard (it may be suspended or crash-looping). See docs/OPERATIONS.md.`;
+              const issue = await findAlertIssue();
+              if (issue) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, body,
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  title: process.env.ISSUE_TITLE, body,
+                });
+              }
+              core.setFailed(`API unreachable: ${e.message}`);
+              return;
+            }
+
+            const zones = (dashboard.zones || []).length;
+            const problems = [];
+            if (zones === 0) problems.push(`**0 zones reporting** (expected 20)`);
+            for (const s of health.sources || []) {
+              const live = ["openmeteo_weather", "metno_locationforecast", "openmeteo_air_quality"];
+              if (live.includes(s.source_name) && (!s.last_updated || s.is_stale)) {
+                problems.push(`**${s.source_name}** has no fresh observation (last_updated: ${s.last_updated}, status: ${s.status})`);
+              }
+            }
+
+            if (problems.length === 0) {
+              core.info(`Healthy: ${zones} zones reporting, all live sources fresh.`);
+              const issue = await findAlertIssue();
+              if (issue) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `Recovered at ${nowIso()} — ${zones} zones reporting, sources fresh. Auto-closing.`,
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, state: "closed",
+                });
+              }
+              return;
+            }
+
+            const body = problems.join("\n\n") +
+              `\n\n_Detected at ${nowIso()} (UTC). Runbook: docs/OPERATIONS.md. Backend: https://urbanrisk-backend-4yqu.onrender.com_`;
+            const issue = await findAlertIssue();
+            if (issue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: process.env.ISSUE_TITLE, body,
+              });
+            }
+            core.setFailed(problems.join(" | "));
