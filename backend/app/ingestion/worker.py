@@ -17,7 +17,7 @@ import os
 import sys
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import text
 
@@ -27,6 +27,33 @@ from app.ingestion.fetch import (
     fetch_current_weather_batch, fetch_current_air_quality_batch,
     fetch_current_weather_met_batch, FetchError,
 )
+# Storage bound: the dashboard reads only the latest observation per zone, so
+# anything older than the retention window is dead weight on a 1 GB free Postgres.
+OBSERVATION_RETENTION_DAYS = int(os.environ.get("OBSERVATION_RETENTION_DAYS", "45"))
+_last_cleanup_date = None
+
+
+def cleanup_old_observations(db) -> None:
+    """Delete observations older than OBSERVATION_RETENTION_DAYS, once per UTC day.
+
+    Predictions never read history from these tables (models come from the M1-M3
+    training artifacts), so this bounds storage growth without touching output.
+    """
+    global _last_cleanup_date
+    today = datetime.now(timezone.utc).date()
+    if _last_cleanup_date == today:
+        return
+    _last_cleanup_date = today
+    cutoff = datetime.now(timezone.utc) - timedelta(days=OBSERVATION_RETENTION_DAYS)
+    for table in ("weather", "air_quality"):
+        result = db.execute(
+            text(f"DELETE FROM {table} WHERE observed_at < :cutoff"),
+            {"cutoff": cutoff},
+        )
+        print(f"[ingestion] retention: pruned {result.rowcount} rows older than "
+              f"{OBSERVATION_RETENTION_DAYS}d from {table}")
+    db.commit()
+
 
 INTERVAL_MINUTES = int(os.environ.get("INGESTION_INTERVAL_MINUTES", "10"))
 if not (5 <= INTERVAL_MINUTES <= 15):
@@ -44,6 +71,8 @@ def run_one_cycle(db):
     if not zones:
         print("[ingestion] `locations` table is empty -- backend hasn't seeded zones yet. Skipping this cycle.")
         return
+
+    cleanup_old_observations(db)
 
     coords = [(zone["latitude"], zone["longitude"]) for zone in zones]
 
